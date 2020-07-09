@@ -6,10 +6,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"net/http"
+	"os"
 )
 
 // Define User
@@ -79,38 +79,13 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//Rest API for getting user by name
-func getUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	server := Result{}
-	db = db_connect()
-	defer db.Close()
 
-	if db != nil {
-			params := mux.Vars(r)
-			result, err := db.Query(`SELECT Id FROM users4 WHERE Id = ?`,params["Id"])
-		if err != nil {
-			server.Status = false
-			panic(err.Error())
-		}
-		var user User
-		for result.Next() {
-			err := result.Scan(&user.Id, &user.Name, &user.Time)
-			if err != nil {
-				server.Status = false
-				panic(err.Error())
-			}
-		}
-		json.NewEncoder(w).Encode(user)
-	}
-
-}
 
 func db_connect() *sql.DB {
-	dbHost := "192.168.0.143"
-	dbUser := "postgres"
-	dbPass := "mysecretpassword"
-	dbName := "postgres"
+	dbHost := os.Getenv("DB_HOST")//"192.168.0.143"
+	dbUser := os.Getenv("DB_USER")//"postgres"
+	dbPass := os.Getenv("DB_PASS")//"mysecretpassword"
+	dbName := os.Getenv("DB_NAME")//"postgres"
 	dbPort := 5432
 	// DB_HOST
 
@@ -149,8 +124,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		//json.Unmarshal(body, &keyVal)
 		//Name := keyVal["Name"]
 		//Time :=keyVal["Time"]
-		//
-		_, err = db.Exec(stmt,"Harsh","India")
+
+		_, err = db.Exec(stmt,`Bhushan`,`Africa`)
 		result.Status = true
 		if err != nil {
 			result.Status = false
