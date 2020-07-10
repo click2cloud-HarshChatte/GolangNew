@@ -26,10 +26,7 @@ type Result struct {
 var db *sql.DB
 var err error
 
-//  type Person struct {
-//     Name string `json:"name"`
-//  }
-// Rest API for getting all users
+
 func createtable() {
 
 	db = db_connect()
@@ -82,14 +79,14 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 
 func db_connect() *sql.DB {
-	dbHost := os.Getenv("DB_HOST")//"192.168.0.143"
-	dbUser := os.Getenv("DB_USER")//"postgres"
-	dbPass := os.Getenv("DB_PASS")//"mysecretpassword"
-	dbName := os.Getenv("DB_NAME")//"postgres"
-	dbPort := 5432
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbName := os.Getenv("DB_NAME")
+		dbPort := os.Getenv("DB_PORT")
 	// DB_HOST
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPass, dbName)
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPass, dbName)
 
 	db, err := sql.Open("postgres", psqlInfo)
 
@@ -105,6 +102,7 @@ func db_connect() *sql.DB {
 func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	result := Result{}
+	u:=new(User)
 	db = db_connect()
 	defer db.Close()
 	if db != nil {
@@ -114,18 +112,13 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 			result.Status = false
 			panic(err.Error())
 		}
-		//body, err := ioutil.ReadAll(r.Body)
-		//if err != nil {
-		//	result.Status = false
-		//	panic(err.Error())
-		//
-		//}
-		//keyVal := make(map[string]string)
-		//json.Unmarshal(body, &keyVal)
-		//Name := keyVal["Name"]
-		//Time :=keyVal["Time"]
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&u); err != nil {
+			json.NewEncoder(w).Encode(err)
+		}
 
-		_, err = db.Exec(stmt,`Bhushan`,`Africa`)
+
+		_, err = db.Exec(stmt,u.Name,u.Time)
 		result.Status = true
 		if err != nil {
 			result.Status = false
@@ -143,9 +136,8 @@ func main() {
 
 	router := mux.NewRouter()
 
-	// create table func
+
 	createtable()
-	// test()
 
 	router.HandleFunc("/users/New", createUser).Methods("POST")
 	router.HandleFunc("/users", GetAllUsers).Methods("GET")
